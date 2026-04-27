@@ -146,17 +146,29 @@ public class MenuScene {
     }
 
     private void startMenuMusic() {
-        javafx.scene.media.Media music = AssetLoader.loadMusic("/audio/music/Square Cartridge.mp3");
-        if (music == null) return;
-
-        MediaPlayer player = new MediaPlayer(music);
-        player.setCycleCount(MediaPlayer.INDEFINITE);
-        player.setVolume(0.6);
+        javafx.scene.media.Media intro = AssetLoader.loadMusic("/audio/music/Square Cartridge1.mp3");
+        javafx.scene.media.Media loop  = AssetLoader.loadMusic("/audio/music/Square Cartridge2.wav");
+        if (intro == null || loop == null) return;
 
         MusicManager mm = MusicManager.getInstance();
         if (mm.getBgPlayer() != null) mm.getBgPlayer().stop();
-        mm.setBgPlayer(player);
 
-        if (mm.isMusicEnabled()) player.play();
+        // Build the looping player first so it's ready when intro ends
+        MediaPlayer loopPlayer = new MediaPlayer(loop);
+        loopPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+        loopPlayer.setVolume(0.6);
+
+        // Intro plays once, then hands off to the loop player
+        MediaPlayer introPlayer = new MediaPlayer(intro);
+        introPlayer.setCycleCount(1);
+        introPlayer.setVolume(0.6);
+        introPlayer.setOnEndOfMedia(() -> {
+            mm.setBgPlayer(loopPlayer);
+            if (mm.isMusicEnabled()) loopPlayer.play();
+        });
+
+        // Register intro as the current player so mute toggle works immediately
+        mm.setBgPlayer(introPlayer);
+        if (mm.isMusicEnabled()) introPlayer.play();
     }
 }
