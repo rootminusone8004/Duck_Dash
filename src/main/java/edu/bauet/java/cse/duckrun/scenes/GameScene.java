@@ -385,6 +385,8 @@ public class GameScene {
         }
     }
 
+    // ONLY showing the UPDATED method — rest of your file stays EXACTLY the same
+
     private void setupControls() {
         scene.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ESCAPE) {
@@ -394,17 +396,29 @@ public class GameScene {
             }
             if (isPaused) return;
 
-            if (event.getCode() == KeyCode.SPACE || event.getCode() == KeyCode.W || event.getCode() == KeyCode.UP) {
+            if (event.getCode() == KeyCode.SPACE ||
+                    event.getCode() == KeyCode.W ||
+                    event.getCode() == KeyCode.UP) {
                 duck.jump();
             }
-            if (event.getCode() == KeyCode.DOWN || event.getCode() == KeyCode.S) {
+
+            if (event.getCode() == KeyCode.DOWN ||
+                    event.getCode() == KeyCode.S) {
                 duck.setCrouching(true);
             }
         });
 
         scene.setOnKeyReleased(event -> {
-            if (event.getCode() == KeyCode.DOWN || event.getCode() == KeyCode.S) {
+            if (event.getCode() == KeyCode.DOWN ||
+                    event.getCode() == KeyCode.S) {
                 duck.setCrouching(false);
+            }
+
+            // 🔥 THIS LINE FIXES THE CONTINUOUS JUMP BUG
+            if (event.getCode() == KeyCode.SPACE ||
+                    event.getCode() == KeyCode.W ||
+                    event.getCode() == KeyCode.UP) {
+                duck.cancelQueuedJump();
             }
         });
     }

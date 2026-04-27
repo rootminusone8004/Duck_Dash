@@ -46,6 +46,9 @@ public class Duck {
     private boolean goingUp = false;
     private boolean comingDown = false;
 
+    // Input buffer — remembers a jump press that arrived while airborne
+    private boolean jumpQueued = false;
+
     // Default values — overridden per-level via setJumpSpeed() / setFallSpeed()
     private double jumpHeight = 250;
     private double jumpSpeed  = 900; // pixels per second
@@ -175,6 +178,15 @@ public class Duck {
                 duckView.setLayoutY(groundLine - DISPLAY_HEIGHT);
                 comingDown = false;
                 jumping = false;
+
+                // FIX: fire a buffered jump the instant the duck lands so a
+                // press that arrived slightly before touchdown is never lost.
+                if (jumpQueued && !crouching) {
+                    jumpQueued = false;
+                    jumping = true;
+                    goingUp = true;
+                    maxY = duckView.getLayoutY() - jumpHeight;
+                }
             }
         }
 
@@ -242,11 +254,28 @@ public class Duck {
     }
 
     public void jump() {
-        if (!jumping && !crouching) {
-            jumping = true;
-            goingUp = true;
-            maxY = duckView.getLayoutY() - jumpHeight;
+        if (!crouching) {
+            if (!jumping) {
+                // Duck is on the ground — jump immediately
+                jumping = true;
+                goingUp = true;
+                maxY = duckView.getLayoutY() - jumpHeight;
+            } else if (!jumpQueued) {
+                // Duck is airborne — buffer ONE press so it fires on landing.
+                // We only accept it if no jump is already queued, so holding
+                // the button down never queues more than one extra jump.
+                jumpQueued = true;
+            }
         }
+    }
+
+    /**
+     * Call this on KEY_RELEASED for the jump key.
+     * Discards any buffered jump so holding the button down doesn't cause
+     * the duck to keep jumping after it lands.
+     */
+    public void cancelQueuedJump() {
+        jumpQueued = false;
     }
 
     public void setCrouching(boolean crouch) {
@@ -300,6 +329,7 @@ public class Duck {
         goingUp = false;
         comingDown = false;
         crouching = false;
+        jumpQueued = false;
         duckView.setLayoutY(groundLine - DISPLAY_HEIGHT);
     }
 
@@ -318,6 +348,7 @@ public class Duck {
         goingUp = false;
         comingDown = false;
         runningOff = false;
+        jumpQueued = false;
         duckGroup.setLayoutX(200);
         duckView.setLayoutY(groundLine - DISPLAY_HEIGHT);
         duckView.setEffect(null);
