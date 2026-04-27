@@ -181,24 +181,13 @@ public class StoryScene {
         if (hasNavigated) return;
         hasNavigated = true;
 
-        // Ensure we are on the FX thread
         Platform.runLater(() -> {
-            // 1. Create the new scene first
-            MenuScene menuScene = new MenuScene(stage);
-            Scene nextScene = menuScene.createScene();
-
-            // 2. Switch the scene immediately to unblock the UI
-            MainApp.switchScene(nextScene);
-
-            // 3. Clean up the media player in the background
             if (mp != null) {
-                try {
-                    mp.stop();
-                    mp.dispose();
-                } catch (Exception e) {
-                    System.err.println("Error disposing player: " + e.getMessage());
-                }
+                mp.stop();
+                mp.dispose();
             }
+            MenuScene menuScene = new MenuScene(stage);
+            MainApp.switchScene(menuScene.createScene());
         });
     }
 }
