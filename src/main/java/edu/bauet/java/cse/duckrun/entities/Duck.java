@@ -289,6 +289,7 @@ public class Duck {
         pause.play();
     }
 
+
     private boolean runningOff = false;
     private static final double RUN_OFF_SPEED = 600; // pixels per second
 
