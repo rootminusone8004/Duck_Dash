@@ -17,14 +17,14 @@ public class MainApp extends Application {
         primaryStage = stage;
         primaryStage.setTitle("Duck Dash");
         primaryStage.setResizable(false);
-        
+
         // Preload all game assets
         AssetLoader.preloadAssets();
 
         // Start with the Story Scene
         StoryScene storyScene = new StoryScene();
         Scene scene = storyScene.createScene(stage);
-        
+
         primaryStage.setScene(scene);
         primaryStage.show();
     }
