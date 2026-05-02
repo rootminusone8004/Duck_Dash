@@ -49,31 +49,26 @@ public class StoryScene {
 
         root.getChildren().removeIf(n -> n instanceof MediaView);
 
+        // Get the pre-written temp file URI — fully on disk, no JAR streaming
+        String videoUri = AssetLoader.loadVideoUri("/Story/opening2.mp4");
+        if (videoUri == null) {
+            showImageFallback(root, stage);
+            return;
+        }
+
         Media video;
         try {
-            video = AssetLoader.loadFreshVideo("/Story/opening.mp4");
-            if (video == null) {
-                showImageFallback(root, stage);
-                return;
-            }
+            video = new Media(videoUri);
         } catch (Exception e) {
-            showImageFallback(root, stage);
+            System.out.println("Media creation failed: " + e.getMessage());
+            retryOrFallback(root, stage, mpHolder, attempt);
             return;
         }
 
         MediaPlayer player = new MediaPlayer(video);
         mpHolder[0] = player;
 
-        // KEY FIX 1: Never let GStreamer skip frames to catch up.
-        // When decoding falls behind, this keeps playback at real speed
-        // rather than racing ahead to sync with the clock.
         player.setRate(1.0);
-
-        // KEY FIX 2: Mute audio-video sync corrections that cause speed-up.
-        // JavaFX's default AV sync drops video frames to stay locked to audio —
-        // disabling this keeps frames in order at the cost of slight drift,
-        // which is far less noticeable than sudden speed bursts.
-        System.setProperty("com.sun.media.jfxmediaimpl.platform.gstreamer.GSTPlatform.DISABLE_AV_SYNC", "true");
 
         MediaView mv = new MediaView(player);
         root.getChildren().add(0, mv);
@@ -87,12 +82,16 @@ public class StoryScene {
             mv.setPreserveRatio(true);
             mv.setSmooth(true);
 
-            // KEY FIX 3: Small delay before play so the JavaFX scene graph
-            // has fully rendered the MediaView surface before the first frame.
-            // Without this, early frames are dropped while the surface initializes,
-            // making the video appear to start fast.
-            PauseTransition startDelay = new PauseTransition(Duration.millis(200));
-            startDelay.setOnFinished(e -> player.play());
+            player.setMute(true);
+
+            PauseTransition startDelay = new PauseTransition(Duration.millis(300));
+            startDelay.setOnFinished(e -> {
+                player.play();
+                // Unmute after another 200ms — by then video decoder is running
+                PauseTransition unmuteDelay = new PauseTransition(Duration.millis(200));
+                unmuteDelay.setOnFinished(u -> player.setMute(false));
+                unmuteDelay.play();
+            });
             startDelay.play();
         });
 
@@ -126,9 +125,11 @@ public class StoryScene {
             }
         });
 
+        // Watchdog — if video hasn't started playing within 5 seconds, retry
         PauseTransition readyWatchdog = new PauseTransition(Duration.seconds(5));
         readyWatchdog.setOnFinished(e -> {
             if (!everPlayed[0] && player.getStatus() != MediaPlayer.Status.DISPOSED) {
+                System.out.println("Ready watchdog fired — video never played.");
                 player.dispose();
                 mpHolder[0] = null;
                 Platform.runLater(() -> retryOrFallback(root, stage, mpHolder, attempt));
@@ -139,11 +140,13 @@ public class StoryScene {
 
     private void retryOrFallback(StackPane root, Stage stage, MediaPlayer[] mpHolder, int attempt) {
         if (attempt < MAX_RETRIES) {
+            System.out.println("Retrying in 500ms...");
             PauseTransition retry = new PauseTransition(Duration.millis(500));
             retry.setOnFinished(e -> Platform.runLater(() ->
                     attemptVideoLoad(root, stage, mpHolder, attempt + 1)));
             retry.play();
         } else {
+            System.out.println("All retries exhausted — showing image fallback.");
             Platform.runLater(() -> showImageFallback(root, stage));
         }
     }

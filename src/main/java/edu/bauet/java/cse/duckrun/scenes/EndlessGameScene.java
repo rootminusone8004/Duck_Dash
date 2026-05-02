@@ -607,6 +607,9 @@ public class EndlessGameScene {
         gameLoop = null;
         stopBgMusic();
 
+        // Add this line:
+        MusicManager.getInstance().playOneShot("/audio/music/game_over.mp3", 1.0);
+
         // Save best endless survival time
         saveEndlessScore();
 

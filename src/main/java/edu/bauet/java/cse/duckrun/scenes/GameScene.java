@@ -113,6 +113,10 @@ public class GameScene {
     private boolean levelCompleted  = false;
     private boolean duckRunningOff  = false;
 
+    // Cheat Code tracking: press E-N-D in sequence to jump to end of level
+    private final List<KeyCode> cheatSequence = List.of(KeyCode.E, KeyCode.N, KeyCode.D);
+    private final List<KeyCode> cheatBuffer = new ArrayList<>();
+
     public GameScene(Level level) {
         this.currentLevel = level;
         this.isLevel1 = level instanceof Level1;
@@ -409,7 +413,20 @@ public class GameScene {
     // ONLY showing the UPDATED method — rest of your file stays EXACTLY the same
 
     private void setupControls() {
+
         scene.setOnKeyPressed(event -> {
+            // Cheat code: E → N → D jumps to end of level
+            cheatBuffer.add(event.getCode());
+            if (cheatBuffer.size() > cheatSequence.size()) {
+                cheatBuffer.remove(0);
+            }
+            if (cheatBuffer.equals(cheatSequence)) {
+                cheatBuffer.clear();
+                levelScrolledPixels = levelTotalScrollPixels * 1.0;
+                bgScrolledTotal = loopsToComplete - 3;
+                System.out.println("Cheat activated — jumped to end of level.");
+            }
+
             if (event.getCode() == KeyCode.ESCAPE) {
                 if (isPaused) resumeGame();
                 else pauseGame();
@@ -827,9 +844,6 @@ public class GameScene {
         timeUtil.stop();
         stopBgMusic();
 
-        // play victory music
-        MusicManager.getInstance().playOneShot("/audio/music/victory.mp3", 1.0);
-
         int elapsed = timeUtil.getElapsedSeconds();
         if (currentLevel instanceof Level1) {
             HighScoreManager.submitLevel1(elapsed);
@@ -837,7 +851,13 @@ public class GameScene {
             HighScoreManager.submitLevel2(elapsed);
         } else if (currentLevel instanceof Level3) {
             HighScoreManager.submitLevel3(elapsed);
+            // Skip victory screen — show ending cutscene instead
+            showEndingCutscene();
+            return;
         }
+
+        // play victory music
+        MusicManager.getInstance().playOneShot("/audio/music/victory.mp3", 1.0);
 
         for (Enemy e : enemies) root.getChildren().remove(e.getNode());
         enemies.clear();
@@ -910,6 +930,26 @@ public class GameScene {
         if (!scene.getStylesheets().contains(css)) {
             scene.getStylesheets().add(css);
         }
+    }
+
+    private void showEndingCutscene() {
+        // Stop any leftover music
+        // play victory music only for Level 1 and 2
+        if (!(currentLevel instanceof Level3)) {
+            MusicManager.getInstance().playOneShot("/audio/music/victory.mp3", 1.0);
+        }
+
+        // Clean up remaining entities from the scene
+        for (Enemy e : enemies) root.getChildren().remove(e.getNode());
+        enemies.clear();
+        for (Food f : foods) root.getChildren().remove(f.getNode());
+        foods.clear();
+        for (Obstacle o : obstacles) root.getChildren().remove(o.getNode());
+        obstacles.clear();
+
+        // Switch to EndingScene
+        EndingScene endingScene = new EndingScene();
+        MainApp.switchScene(endingScene.createScene());
     }
 
     private Level getNextLevel() {

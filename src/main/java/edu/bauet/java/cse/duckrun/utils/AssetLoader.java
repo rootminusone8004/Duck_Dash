@@ -3,6 +3,7 @@ package edu.bauet.java.cse.duckrun.utils;
 import javafx.scene.image.Image;
 import javafx.scene.media.Media;
 
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.HashMap;
@@ -16,8 +17,8 @@ public final class AssetLoader {
     private static final boolean FAIL_FAST = false;
 
     private static final Map<String, Image> imageCache = new HashMap<>();
-    private static final Map<String, Media> videoCache = new HashMap<>();
     private static final Map<String, Media> musicCache = new HashMap<>();
+    private static final Map<String, String> videoUriCache = new HashMap<>();
 
     public static Media loadMusic(String resourcePath) {
         if (musicCache.containsKey(resourcePath)) {
@@ -39,79 +40,71 @@ public final class AssetLoader {
         }
     }
 
+    public static String loadVideoUri(String resourcePath) {
+        if (videoUriCache.containsKey(resourcePath)) {
+            return videoUriCache.get(resourcePath);
+        }
 
-    public static Media loadVideo(String resourcePath) {
-        try {
-            URL url = AssetLoader.class.getResource(resourcePath);
-            if (url == null) {
-                System.out.println("VIDEO NOT FOUND: " + resourcePath);
+        try (InputStream is = AssetLoader.class.getResourceAsStream(resourcePath)) {
+            if (is == null) {
+                LOGGER.severe("VIDEO NOT FOUND: " + resourcePath);
                 return null;
             }
-            return new Media(url.toExternalForm()); // fresh every time for video
+            byte[] videoBytes = is.readAllBytes();
+            java.io.File tempFile = java.io.File.createTempFile("duckrun_video_", ".mp4");
+            tempFile.deleteOnExit();
+            try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+                fos.write(videoBytes);
+            }
+            String uri = tempFile.toURI().toString();
+            videoUriCache.put(resourcePath, uri);
+            LOGGER.info("Video preloaded to temp file: " + uri);
+            return uri;
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error loading video: " + resourcePath, e);
             return null;
         }
     }
 
-
     public static Image getImage(String path) {
-
         if (imageCache.containsKey(path)) {
             return imageCache.get(path);
         }
-
         Image image = loadImageInternal(path);
         imageCache.put(path, image);
-
         return image;
     }
 
-
     private static Image loadImageInternal(String path) {
         try {
-            // Get the resource URL instead of the Stream
             URL url = AssetLoader.class.getResource(path);
-
             if (url == null) {
                 return handleMissingImage(path);
             }
-
-            // Loading via URL string preserves the URL property for img.getUrl()
             return new Image(url.toExternalForm());
-
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error loading image: " + path, e);
             return handleMissingImage(path);
         }
     }
 
-
     private static Image handleMissingImage(String path) {
-
         String message = "Image not found: " + path;
-
         if (FAIL_FAST) {
             throw new RuntimeException(message);
         }
-
         LOGGER.warning(message + " | Using placeholder image.");
-
         return createPlaceholderImage();
     }
 
-
     private static Image createPlaceholderImage() {
-
         return new Image(
                 "data:image/png;base64,"
                         + "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
         );
     }
 
-
     private static final String[] PRELOAD_IMAGE_PATHS = {
-
             "/images/duck/running.png",
             "/images/duck/running_mid_point.png",
             "/images/duck/running_sleepy.png",
@@ -126,10 +119,8 @@ public final class AssetLoader {
             "/images/duck/victory.png",
             "/images/duck/sleeping.png",
             "/images/duck/base_duck.png",
-
             "/images/shadow/Shadow(normal).png",
             "/images/shadow/Shadow(small).png",
-
             "/images/enemies/Worm.png",
             "/images/enemies/Bread.png",
             "/images/enemies/Cockroach.png",
@@ -139,23 +130,19 @@ public final class AssetLoader {
             "/images/enemies/Cat_state_2.png",
             "/images/enemies/Eagle_state_1.png",
             "/images/enemies/Eagle_state_2.png",
-
             "/images/game_over/game_over_cat.png",
             "/images/game_over/game_over_bump.png",
             "/images/game_over/game_over_eagle.png",
             "/images/game_over/game_over_caught.png",
-
             "/images/indicator/heart_full.png",
             "/images/indicator/heart_empty.png",
             "/images/indicator/sleep_bar_full.png",
             "/images/indicator/sleep_bar_empty.png",
-
             "/images/obstacles/bottle.png",
             "/images/obstacles/plant1.png",
             "/images/obstacles/plant2.png",
             "/images/obstacles/Chair_wood.png",
             "/images/obstacles/chair_black.png",
-
             "/images/pause_menu/exit_button.png",
             "/images/pause_menu/play_button.png",
             "/images/pause_menu/pause_button.png",
@@ -163,60 +150,39 @@ public final class AssetLoader {
             "/images/pause_menu/settings_button.png",
             "/images/pause_menu/pause_menu_frame.png",
             "/images/pause_menu/settings_menu_frame.png",
-
             "/images/backgrounds/level1.png",
             "/images/backgrounds/level2.png",
             "/images/backgrounds/level3.png",
-
             "/images/ui/duck_emoji.png",
             "/images/ui/hall_background.png",
             "/images/ui/hall_ui_1200x600.png",
-
             "/Story/startstory.png"
     };
 
-
     private static final String[] PRELOAD_VIDEO_PATHS = {
-
-            "/Story/opening.mp4"
+            "/Story/opening2.mp4",
+            "/Story/ending.mp4"
     };
 
-
     public static void preloadAssets() {
-
         LOGGER.info("Preloading image assets...");
-
         for (String path : PRELOAD_IMAGE_PATHS) {
             getImage(path);
         }
-
         LOGGER.info("Image preloading complete.");
     }
 
-
     public static void preloadVideos() {
-        // Videos are NOT cached because MediaPlayer.dispose() kills the underlying
-        // Media object — caching a disposed Media causes black screen on next use.
-        // This method is intentionally a no-op; loadFreshVideo() creates on demand.
-        LOGGER.info("Video preloading skipped (videos are always created fresh).");
+        LOGGER.info("Preloading videos...");
+        for (String path : PRELOAD_VIDEO_PATHS) {
+            loadVideoUri(path);
+        }
+        LOGGER.info("Video preloading complete.");
     }
-
-
-    /**
-     * Always returns a brand-new Media object for the given path.
-     * Use this for videos that will be played then disposed (e.g. cutscenes).
-     * Never use the old getCachedVideo() for disposable media.
-     */
-    public static Media loadFreshVideo(String resourcePath) {
-        return loadVideo(resourcePath);
-    }
-
 
     public static void clearAll() {
-
         imageCache.clear();
-        videoCache.clear();
-
+        videoUriCache.clear();
         LOGGER.info("Image and video cache cleared.");
     }
 }

@@ -18,10 +18,14 @@ public class MainApp extends Application {
         primaryStage.setTitle("Duck Dash");
         primaryStage.setResizable(false);
 
-        // Preload all game assets
-        AssetLoader.preloadAssets();
+        System.setProperty(
+                "com.sun.media.jfxmediaimpl.platform.gstreamer.GSTPlatform.DISABLE_AV_SYNC",
+                "true"
+        );
 
-        // Start with the Story Scene
+        AssetLoader.preloadAssets();
+        AssetLoader.preloadVideos();
+
         StoryScene storyScene = new StoryScene();
         Scene scene = storyScene.createScene(stage);
 
