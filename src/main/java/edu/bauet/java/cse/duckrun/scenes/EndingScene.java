@@ -4,20 +4,19 @@ import edu.bauet.java.cse.duckrun.MainApp;
 import edu.bauet.java.cse.duckrun.utils.AssetLoader;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+/**
+ * Plays the ending cutscene video, then hands off to CreditsScene.
+ * SPACE skips straight to CreditsScene.
+ */
 public class EndingScene {
 
     private volatile boolean hasNavigated = false;
@@ -31,24 +30,22 @@ public class EndingScene {
         Scene scene = new Scene(root, MainApp.WINDOW_WIDTH, MainApp.WINDOW_HEIGHT);
         scene.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.SPACE) {
-                navigateToMenu();
+                navigateToCredits(); // SPACE skips video → goes to credits
             }
         });
 
         attemptVideoLoad(root, 1);
-
         return scene;
     }
 
     private void attemptVideoLoad(StackPane root, int attempt) {
         System.out.println("Ending video load attempt " + attempt + "/" + MAX_RETRIES);
-
         root.getChildren().removeIf(n -> n instanceof MediaView);
 
         String videoUri = AssetLoader.loadVideoUri("/Story/ending.mp4");
         if (videoUri == null) {
-            System.out.println("Ending video URI null — going to menu.");
-            navigateToMenu();
+            System.out.println("Ending video URI null — going to credits.");
+            navigateToCredits();
             return;
         }
 
@@ -89,8 +86,8 @@ public class EndingScene {
 
         videoPlayer.setOnPlaying(() -> everPlayed[0] = true);
 
-        // When video ends, go to main menu
-        videoPlayer.setOnEndOfMedia(() -> navigateToMenu());
+        // ── Video ends → go to credits ─────────────────────────────────────
+        videoPlayer.setOnEndOfMedia(this::navigateToCredits);
 
         videoPlayer.setOnError(() -> {
             System.out.println("Ending video error: " + videoPlayer.getError());
@@ -123,7 +120,7 @@ public class EndingScene {
             if (!everPlayed[0] &&
                     videoPlayer != null &&
                     videoPlayer.getStatus() != MediaPlayer.Status.DISPOSED) {
-                System.out.println("Ending watchdog fired — skipping to menu.");
+                System.out.println("Ending watchdog fired — skipping to credits.");
                 disposeAll();
                 Platform.runLater(() -> retryOrFallback(root, attempt));
             }
@@ -147,20 +144,19 @@ public class EndingScene {
                     attemptVideoLoad(root, attempt + 1)));
             retry.play();
         } else {
-            System.out.println("All retries exhausted — going to menu.");
-            Platform.runLater(this::navigateToMenu);
+            System.out.println("All retries exhausted — going to credits.");
+            Platform.runLater(this::navigateToCredits);
         }
     }
 
-    private void navigateToMenu() {
+    private void navigateToCredits() {
         if (hasNavigated) return;
         hasNavigated = true;
 
         Platform.runLater(() -> {
             disposeAll();
-            Stage stage = MainApp.getPrimaryStage();
-            MenuScene menuScene = new MenuScene(stage);
-            MainApp.switchScene(menuScene.createScene());
+            CreditsScene credits = new CreditsScene();
+            MainApp.switchScene(credits.createScene());
         });
     }
 }

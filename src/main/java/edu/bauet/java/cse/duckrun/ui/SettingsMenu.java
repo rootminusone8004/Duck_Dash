@@ -1,5 +1,7 @@
 package edu.bauet.java.cse.duckrun.ui;
 
+import edu.bauet.java.cse.duckrun.MainApp;
+import edu.bauet.java.cse.duckrun.scenes.CreditsScene;
 import edu.bauet.java.cse.duckrun.utils.HighScoreManager;
 import edu.bauet.java.cse.duckrun.utils.MusicManager;
 import javafx.geometry.Insets;
@@ -30,14 +32,11 @@ public class SettingsMenu extends StackPane {
     }
 
     private void initialize() {
-        //initially hidden
         this.setVisible(false);
-        //set style class
         this.getStyleClass().add("settings-box");
         this.setPrefSize(925, 546);
         this.setMaxSize(925, 546);
 
-        // Load CSS specifically for settings
         this.getStylesheets().add(getClass().getResource("/styles/settings_style.css").toExternalForm());
         this.getStylesheets().add(getClass().getResource("/styles/main_menu.css").toExternalForm());
 
@@ -49,6 +48,7 @@ public class SettingsMenu extends StackPane {
         VBox contentLayout = new VBox(20);
         contentLayout.setAlignment(Pos.TOP_CENTER);
 
+        // Title
         Label titleLabel = new Label("SETTINGS");
         titleLabel.getStyleClass().add("settings-title");
         VBox.setMargin(titleLabel, new Insets(60, 0, 0, 0));
@@ -67,8 +67,6 @@ public class SettingsMenu extends StackPane {
         musicBox.getChildren().addAll(musicLabel, musicToggle);
         VBox.setMargin(musicBox, new Insets(80, 0, 0, 0));
 
-        contentLayout.getChildren().addAll(titleLabel, musicBox);
-
         // Reset High Score
         Button resetHsButton = new Button("Reset High Score");
         resetHsButton.getStyleClass().add("menu-button");
@@ -78,7 +76,20 @@ public class SettingsMenu extends StackPane {
             if (highScoreMenu != null) highScoreMenu.refresh();
         });
         VBox.setMargin(resetHsButton, new Insets(20, 0, 0, 0));
-        contentLayout.getChildren().add(resetHsButton);
+
+        // Credits button — same style as Reset High Score
+        Button creditsButton = new Button("Credits");
+        creditsButton.getStyleClass().add("menu-button");
+        creditsButton.setStyle("-fx-pref-width: 360px; -fx-min-width: 360px;");
+        creditsButton.setOnAction(e -> {
+            onClose.run(); // close the settings overlay first
+            CreditsScene credits = new CreditsScene();
+            MainApp.switchScene(credits.createScene());
+
+        });
+        VBox.setMargin(creditsButton, new Insets(0, 0, 0, 0));
+
+        contentLayout.getChildren().addAll(titleLabel, musicBox, resetHsButton, creditsButton);
 
         // Close Button
         Button closeButton = new Button("X");

@@ -1,0 +1,106 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   credits_scene.css — Duck Dash Credits Scene Styling
+   Place at: src/main/resources/styles/credits_scene.css
+   Fonts used:
+     Press Start 2P  → src/main/resources/fonts/PressStart2P-Regular.ttf
+     Montserrat      → src/main/resources/fonts/Montserrat-Regular.ttf
+                       src/main/resources/fonts/Montserrat-Light.ttf
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Root / background ───────────────────────────────────────────────────── */
+
+.credits-root {
+    -fx-background-color: black;
+}
+
+/* ── Thank You overlay ───────────────────────────────────────────────────── */
+
+.credits-thankyou-overlay {
+    -fx-background-color: black;
+}
+
+.credits-thankyou-label {
+    -fx-font-family: "Press Start 2P";
+    -fx-font-size: 18px;
+    -fx-text-fill: #DDDDDD;
+    -fx-text-alignment: center;
+}
+
+/* ── Scrolling column ────────────────────────────────────────────────────── */
+
+.credits-column {
+    -fx-padding: 0 40 0 40;
+    -fx-alignment: top-center;
+}
+
+/* ── Section header  (Press Start 2P, white) ─────────────────────────────── */
+
+.credits-section-header {
+    -fx-font-family: "Press Start 2P";
+    -fx-font-size: 16px;
+    -fx-text-fill: #FFFFFF;
+    -fx-text-alignment: center;
+    -fx-padding: 0 0 6 0;
+    -fx-wrap-text: true;
+}
+
+/* ── Team name  (Press Start 2P, warm gold) ─────────────────────────────── */
+
+.credits-team-name {
+    -fx-font-family: "Press Start 2P";
+    -fx-font-size: 18px;
+    -fx-text-fill: #7a8f4a;
+    -fx-text-alignment: center;
+    -fx-wrap-text: true;
+}
+
+/* ── Closing title  (Press Start 2P, white, largest) ────────────────────── */
+
+.credits-closing-title {
+    -fx-font-family: "Press Start 2P";
+    -fx-font-size: 20px;
+    -fx-text-fill: #FFFFFF;
+    -fx-text-alignment: center;
+    -fx-wrap-text: true;
+}
+
+/* ── Regular name  (Montserrat Regular, light white) ────────────────────── */
+
+.credits-name {
+    -fx-font-family: "Montserrat";
+    -fx-font-size: 18px;
+    -fx-text-fill: #DDDDDD;
+    -fx-text-alignment: center;
+    -fx-wrap-text: true;
+}
+
+/* ── Small gray  (Montserrat Light — roles, categories, institution) ─────── */
+
+.credits-small-gray {
+    -fx-font-family: "Montserrat";
+    -fx-font-size: 16px;
+    -fx-text-fill: #888888;
+    -fx-text-alignment: center;
+    -fx-wrap-text: true;
+}
+
+/* ── Small italic  (Montserrat Light italic — AI credit, tagline) ────────── */
+
+.credits-small-italic {
+    -fx-font-family: "Montserrat";
+    -fx-font-size: 15px;
+    -fx-font-style: italic;
+    -fx-text-fill: #666666;
+    -fx-text-alignment: center;
+    -fx-wrap-text: true;
+}
+
+/* ── Tiny gray  (Montserrat Light — MIT license line) ───────────────────── */
+
+.credits-tiny-gray {
+    -fx-font-family: "Montserrat";
+    -fx-font-size: 14px;
+    -fx-text-fill: #555555;
+    -fx-text-alignment: center;
+    -fx-wrap-text: true;
+}
