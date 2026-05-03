@@ -244,7 +244,7 @@ public class CreditsScene {
         addSpacer(col, 50);
 
         addToolGroup(col, "Language & Runtime",
-                "Java 21   ·   JDK 17+");
+                "Java 21   ·   JDK 21+");
         addSpacer(col, 50);
         addToolGroup(col, "Framework & UI",
                 "JavaFX 21",
