@@ -40,6 +40,12 @@
 
 ### Installation & Running
 
+* Go to the release page: [RELEASE](https://github.com/MdRasB/Duck_Dash/releases).
+* Chose the suitable executable file for your OS.
+* If ```os=windows``` then download & install ```.exe``` file. After installing and running it, a new folder will generate in ```C:\Program Files```. Then select DuckDash and run the application.
+* If ```os=linux(.deb supported)``` then download and isntall ```.deb``` file.
+* If you want to add repo, follow the instruction below
+
 1.  **Clone the Repository:**
     ```bash
     git clone https://github.com/MdRasB/Duck_Dash.git
