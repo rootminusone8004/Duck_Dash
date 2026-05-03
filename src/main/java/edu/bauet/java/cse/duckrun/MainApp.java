@@ -16,7 +16,9 @@ public class MainApp extends Application {
     public void start(Stage stage) {
         primaryStage = stage;
         primaryStage.setTitle("Duck Dash");
-        primaryStage.setResizable(false);
+        primaryStage.setResizable(true);
+        primaryStage.setMinWidth(320);
+        primaryStage.setMinHeight(180);
 
         System.setProperty(
                 "com.sun.media.jfxmediaimpl.platform.gstreamer.GSTPlatform.DISABLE_AV_SYNC",
@@ -43,6 +45,14 @@ public class MainApp extends Application {
 
     public static Stage getPrimaryStage() {
         return primaryStage;
+    }
+
+    /** Current uniform scale factor relative to the design resolution. */
+    public static double getScaleFactor() {
+        if (primaryStage == null) return 1.0;
+        double scaleX = primaryStage.getWidth()  / WINDOW_WIDTH;
+        double scaleY = primaryStage.getHeight() / WINDOW_HEIGHT;
+        return Math.min(scaleX, scaleY);
     }
 
     public static void main(String[] args) {

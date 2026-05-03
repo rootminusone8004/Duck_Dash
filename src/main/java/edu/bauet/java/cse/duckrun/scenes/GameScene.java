@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.transform.Scale;
+import javafx.scene.transform.Scale;
 import javafx.scene.media.Media;
 import javafx.util.Duration;
 import javafx.geometry.Pos;
@@ -127,16 +129,36 @@ public class GameScene {
         initialize(level.getBackgroundPath());
     }
 
+    // Scale transform applied to root so the 1280x720 game fills any window size
+    private final Scale gameScale = new Scale(1, 1, 0, 0);
+
+    /** Recompute uniform scale to letterbox/pillarbox the game inside the window. */
+    private void updateScale(double w, double h) {
+        double s = Math.min(w / MainApp.WINDOW_WIDTH, h / MainApp.WINDOW_HEIGHT);
+        gameScale.setX(s);
+        gameScale.setY(s);
+    }
+
     private void initialize(String backgroundPath) {
         root = new Pane();
         root.setPrefSize(MainApp.WINDOW_WIDTH, MainApp.WINDOW_HEIGHT);
         root.setStyle("-fx-background-color: black;");
+        root.getTransforms().add(gameScale);
 
         menuLayer = new StackPane();
         menuLayer.setPrefSize(MainApp.WINDOW_WIDTH, MainApp.WINDOW_HEIGHT);
         menuLayer.setPickOnBounds(false);
 
-        scene = new Scene(root, MainApp.WINDOW_WIDTH, MainApp.WINDOW_HEIGHT);
+        // Wrap root in a Group — Group reports transformed bounds correctly,
+        // unlike StackPane which ignores transforms during layout.
+        javafx.scene.Group scaleWrapper = new javafx.scene.Group(root);
+
+        scene = new Scene(scaleWrapper);
+
+        // Recompute scale whenever the window is resized
+        scene.widthProperty().addListener( (obs, o, n) -> updateScale(n.doubleValue(), scene.getHeight()));
+        scene.heightProperty().addListener((obs, o, n) -> updateScale(scene.getWidth(),  n.doubleValue()));
+
         scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/styles/pause_menu.css")).toExternalForm());
 
         createBackground(backgroundPath);

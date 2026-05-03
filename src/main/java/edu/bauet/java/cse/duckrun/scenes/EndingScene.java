@@ -5,6 +5,7 @@ import edu.bauet.java.cse.duckrun.utils.AssetLoader;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.scene.Scene;
+import javafx.scene.transform.Scale;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.media.Media;
@@ -26,8 +27,26 @@ public class EndingScene {
     public Scene createScene() {
         StackPane root = new StackPane();
         root.setStyle("-fx-background-color: black;");
+        root.setPrefSize(MainApp.WINDOW_WIDTH, MainApp.WINDOW_HEIGHT);
+        root.setMinSize(MainApp.WINDOW_WIDTH, MainApp.WINDOW_HEIGHT);
+        root.setMaxSize(MainApp.WINDOW_WIDTH, MainApp.WINDOW_HEIGHT);
 
-        Scene scene = new Scene(root, MainApp.WINDOW_WIDTH, MainApp.WINDOW_HEIGHT);
+        // ── Scale-to-fit: content stays at 1280x720, window can be any size ─────
+        // Group is used as wrapper because it sizes itself to the transformed
+        // bounds of its child — unlike StackPane which ignores transforms for layout.
+        Scale endingScale = new Scale(1, 1, 0, 0);
+        root.getTransforms().add(endingScale);
+        javafx.scene.Group scaleWrapper = new javafx.scene.Group(root);
+
+        Scene scene = new Scene(scaleWrapper);
+        scene.widthProperty().addListener((obs, o, n) -> {
+            double s = Math.min(n.doubleValue() / MainApp.WINDOW_WIDTH, scene.getHeight() / MainApp.WINDOW_HEIGHT);
+            endingScale.setX(s); endingScale.setY(s);
+        });
+        scene.heightProperty().addListener((obs, o, n) -> {
+            double s = Math.min(scene.getWidth() / MainApp.WINDOW_WIDTH, n.doubleValue() / MainApp.WINDOW_HEIGHT);
+            endingScale.setX(s); endingScale.setY(s);
+        });
         scene.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.SPACE) {
                 navigateToCredits(); // SPACE skips video → goes to credits

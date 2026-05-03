@@ -11,6 +11,7 @@ import edu.bauet.java.cse.duckrun.utils.AssetLoader;
 import edu.bauet.java.cse.duckrun.utils.MusicManager;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.transform.Scale;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -42,6 +43,9 @@ public class MenuScene {
         Font pixelFont = Font.loadFont(getClass().getResourceAsStream("/fonts/PressStart2P-Regular.ttf"), 14);
 
         root = new StackPane();
+        root.setPrefSize(MainApp.WINDOW_WIDTH, MainApp.WINDOW_HEIGHT);
+        root.setMinSize(MainApp.WINDOW_WIDTH, MainApp.WINDOW_HEIGHT);
+        root.setMaxSize(MainApp.WINDOW_WIDTH, MainApp.WINDOW_HEIGHT);
 
         // ── Animated background (sky + moving clouds + building) ──────────────
         animatedBg = new MenuBackground();
@@ -103,7 +107,22 @@ public class MenuScene {
                 endlessLevelMenu
         );
 
-        Scene scene = new Scene(root, MainApp.WINDOW_WIDTH, MainApp.WINDOW_HEIGHT);
+        // ── Scale-to-fit: content stays at 1280x720, window can be any size ─────
+        // Group is used as wrapper because it sizes itself to the transformed
+        // bounds of its child — unlike StackPane which ignores transforms for layout.
+        Scale menuScale = new Scale(1, 1, 0, 0);
+        root.getTransforms().add(menuScale);
+        javafx.scene.Group scaleWrapper = new javafx.scene.Group(root);
+
+        Scene scene = new Scene(scaleWrapper);
+        scene.widthProperty().addListener((obs, o, n) -> {
+            double s = Math.min(n.doubleValue() / MainApp.WINDOW_WIDTH, scene.getHeight() / MainApp.WINDOW_HEIGHT);
+            menuScale.setX(s); menuScale.setY(s);
+        });
+        scene.heightProperty().addListener((obs, o, n) -> {
+            double s = Math.min(scene.getWidth() / MainApp.WINDOW_WIDTH, n.doubleValue() / MainApp.WINDOW_HEIGHT);
+            menuScale.setX(s); menuScale.setY(s);
+        });
         scene.getStylesheets().add(getClass().getResource("/styles/main_menu.css").toExternalForm());
 
         animatedBg.start();              // ← begin cloud animation

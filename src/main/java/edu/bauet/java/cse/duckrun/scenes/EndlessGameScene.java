@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javafx.animation.AnimationTimer;
+import javafx.scene.transform.Scale;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
@@ -114,16 +115,31 @@ public class EndlessGameScene {
     }
 
     // ── Initialization ────────────────────────────────────────────────────────
+    // Scale transform so the 1280x720 game fills any window size
+    private final Scale gameScale = new Scale(1, 1, 0, 0);
+
+    private void updateScale(double w, double h) {
+        double s = Math.min(w / MainApp.WINDOW_WIDTH, h / MainApp.WINDOW_HEIGHT);
+        gameScale.setX(s);
+        gameScale.setY(s);
+    }
+
     private void initialize(String backgroundPath) {
         root = new Pane();
         root.setPrefSize(MainApp.WINDOW_WIDTH, MainApp.WINDOW_HEIGHT);
         root.setStyle("-fx-background-color: black;");
+        root.getTransforms().add(gameScale);
 
         menuLayer = new StackPane();
         menuLayer.setPrefSize(MainApp.WINDOW_WIDTH, MainApp.WINDOW_HEIGHT);
         menuLayer.setPickOnBounds(false);
 
-        scene = new Scene(root, MainApp.WINDOW_WIDTH, MainApp.WINDOW_HEIGHT);
+        javafx.scene.Group scaleWrapper = new javafx.scene.Group(root);
+
+        scene = new Scene(scaleWrapper);
+        scene.widthProperty().addListener( (obs, o, n) -> updateScale(n.doubleValue(), scene.getHeight()));
+        scene.heightProperty().addListener((obs, o, n) -> updateScale(scene.getWidth(),  n.doubleValue()));
+
         scene.getStylesheets().add(Objects.requireNonNull(
                 getClass().getResource("/styles/pause_menu.css")).toExternalForm());
 
